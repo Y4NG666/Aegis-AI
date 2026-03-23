@@ -1,178 +1,198 @@
-  # Aegis-AI
-一、项目背景与问题定义
+# 🛡 Aegis AI Guardian
 
-随着 DeFi、公链、Layer2 的发展，Web3 系统变得极其复杂：
+### 面向 Web3 的 AI 驱动自治安全系统
 
-合约组合复杂（Composable）
-交易频率高（高频MEV、套利）
-风险传播快（闪电贷攻击）
+---
 
-但目前的问题是：
+## 项目简介
 
-❌ 安全依赖人工审计（滞后）
-❌ 风险响应慢（攻击已发生才处理）
-❌ 运维缺失（链上没有“自动运维系统”）
+**Aegis AI Guardian** 是一个面向 Web3 基础设施（DeFi / DAO / 公链）的 **AI 驱动自治安全系统**。
 
-核心问题：
+它通过结合：
 
-Web3 缺少一个像“AI运维大脑”一样的系统，实时守护链上安全与性能
+* AI（LLM + 机器学习）
+* Reactive Contracts（响应式合约）
+* 链上自动化执行
 
-二、解决方案概述
+将传统“被动执行”的智能合约，升级为：
 
-我们提出：
+> **可自我监控、自我决策、自我防御、自我执行的智能系统**
 
-Aegis AI = Web3版 AIOps + Reactive Network 执行系统
+---
 
-核心能力：
-1️⃣ AI链上安全监控
-实时分析：
-交易流（tx flow）
-合约调用行为
-流动性变化
-检测：
-闪电贷攻击
-重入攻击
-异常套利行为
-2️⃣ 自动化风险响应
-自动触发：
-pause 合约
-调整参数（利率 / 抵押率）
-发起DAO警报
-通过：
-Reactive Contract 执行
-3️⃣ 网络性能优化
-动态Gas策略
-RPC负载均衡
-Layer2批处理优化
-三、系统架构设计（核心）
-总体架构：
-![Uploading mermaid-diagram.png…]()
+## 行业痛点
 
-四、核心模块设计
-1. 数据采集层（Observability）
+当前 Web3 系统存在以下核心问题：
 
-数据来源：
+* ❌ 智能合约是**被动执行**（必须人为触发）
+* ❌ 安全监控依赖链下机器人（不稳定）
+* ❌ 风险响应速度慢（无法应对秒级攻击）
+* ❌ 闪电贷 / 套利攻击频繁发生
 
-RPC节点（Alchemy / Infura）
-DEX（Uniswap / Curve）
-The Graph
-Chainlink Oracle
+---
 
-采集内容：
+## 解决方案
 
-- 交易数据（tx）
-- 合约调用
-- liquidity变化
-- price feed
-2. AI分析层（AIOps核心）
-模块1：异常检测
-使用：
-时间序列模型（LSTM）
-Isolation Forest
-检测：
-TVL异常下降
-大额异常交易
-模块2：行为识别（重点🔥）
+Aegis 提供一个 **AI 自治安全层（Autonomous AI Layer）**：
 
-识别：
+### 核心能力：
 
-闪电贷攻击模式
-三明治攻击（MEV）
-重入攻击
-模块3：LLM决策引擎（Codex）
+1. 实时监控链上行为（交易 / 事件）
+2. AI 风险分析与决策
+3. 自动触发链上响应（无需人工）
+4. 主动防御攻击（暂停 / 对冲 / 警报）
 
-输入：
+---
 
-当前异常：
-- TVL下降20%
-- 大额借贷行为
-- 多次调用withdraw
+## 系统架构
 
-请判断是否攻击并给出策略
+```mermaid
+flowchart TD
+    A[ 用户 / DAO] --> B[🧠 Aegis AI 智能体]
 
-输出：
+    B --> B1[异常检测]
+    B --> B2[风险分析]
+    B --> B3[决策引擎]
 
-- 高风险攻击
-- 建议暂停合约
-3. Reactive执行层（关键）
+    subgraph DATA["数据层"]
+        D1[RPC 节点]
+        D2[Reactive 合约]
+        D3[链上日志 / 事件]
+        D4[DeFi 数据源]
+    end
 
-核心逻辑：
+    subgraph AI["AI 智能层"]
+        F1[机器学习模型]
+        F2[大语言模型（LLM）]
+        F3[策略引擎]
+    end
 
-Event → AI判断 → RC执行 → callback transaction
-示例：
-// 触发暂停协议
-protocol.pause();
-4. 智能合约层
+    subgraph EXEC["执行层"]
+        E1[回调交易]
+        E2[自动化引擎]
+        E3[链上执行]
+    end
 
-需要设计：
+    subgraph RISK["🛡 风控层"]
+        G1[紧急暂停机制]
+        G2[自动对冲]
+        G3[DAO 警报]
+    end
 
-风控接口
-function pause() external;
-function adjustRate(uint256 newRate) external;
-防御机制
-Circuit Breaker（熔断）
-清算保护
-限流机制
-五、系统工作流（重点）
+    B --> DATA
+    DATA --> AI
+    AI --> EXEC
+    EXEC --> RISK
+    RISK --> A
+```
 
-安全防御流程：
-Step1: 监听链上事件（交易 / liquidity）
-Step2: AI检测异常
-Step3: Codex判断风险等级
-Step4: 生成应对策略
-Step5: Reactive触发执行
-Step6: 合约执行（pause / 调整）
-Step7: DAO收到警报
+---
 
-性能优化流程：
-Step1: 监控Gas和TPS
-Step2: AI分析网络拥堵
-Step3: 输出最优Gas策略
-Step4: 自动调整交易策略
-六、开发阶段规划（非常重要）
-Phase 1：MVP
+## 核心功能
 
-实现：
+### AI 异常检测
 
-监听Uniswap事件
-简单异常检测（规则+AI）
-RC自动执行
-Demo攻击模拟
+* 识别异常交易行为
+* 检测闪电贷攻击 / 套利行为 / 重入风险
 
-Phase 2：增强版
-多协议支持（Aave / Compound）
-AI模型优化
-DAO集成
+### 响应式自动执行
 
-Phase 3：生产级
-多链支持
-高性能数据处理
-风险评分系统
+* 基于事件驱动（无需机器人）
+* 自动触发智能合约执行
 
-七、技术栈
-AI层：
-OpenAI（Codex / GPT）
-Python（ML模型）
-Web3层：
-Solidity
-Reactive Network
-Ethers.js
-数据层：
-The Graph
-Kafka（可选）
-Redis
-开发工具
-Foundry（推荐）
-Hardhat
+### 自动化风控
 
-八、项目价值
-安全价值
-提前发现攻击
-自动防御（无需人工）
+* 自动暂停协议
+* 自动对冲风险
+* DAO 高优先级告警
 
-性能价值：
-优化Gas
-提升TPS
+### 跨链能力
 
-智能化价值：
-Web3从“被动系统” → “自治系统”
+* 监听 A 链事件 → 在 B 链执行
+* 支持跨链自动化工作流
+
+---
+
+## 应用场景示例
+
+### 闪电贷攻击防御
+
+执行流程：
+
+1. 检测到异常流动性变化
+2. AI 判断攻击概率
+3. 自动执行防御策略：
+
+   * 暂停协议
+   * 调整参数
+   * 通知 DAO
+
+---
+
+## 技术栈
+
+| 模块    | 技术                    |
+| ----- | --------------------- |
+| 智能合约  | Solidity              |
+| 响应式执行 | Reactive Network      |
+| AI    | LLM + 机器学习            |
+| 数据层   | RPC / Logs / DeFi API |
+| 自动化   | Callback Transaction  |
+
+---
+
+## 工作流程
+
+```text
+事件 → 异常检测 → AI分析 → 决策 → 自动执行 → 风险控制
+```
+
+---
+
+## 核心创新点
+
+* AI 与智能合约深度融合
+* 事件驱动的链上自动化执行
+* 自主风控系统（无需人工干预）
+* 跨链响应式执行能力
+
+---
+
+## 项目结构
+
+```text
+/contracts
+  ├── ReactiveContract.sol
+  ├── RiskController.sol
+
+/ai
+  ├── anomaly_detection.py
+  ├── strategy_engine.py
+
+/scripts
+  ├── deploy.js
+```
+
+---
+
+## Demo
+
+* [ ] 测试网部署
+* [ ] 攻击模拟演示
+* [ ] 实时监控面板
+
+---
+
+## Roadmap
+
+* [x] 架构设计完成
+* [ ] 测试网集成
+* [ ] 多链支持
+* [ ] DAO 治理模块
+* [ ] AI 模型优化
+
+---
+
+## License
+
+MIT License
