@@ -46,72 +46,8 @@ RPC负载均衡
 Layer2批处理优化
 三、系统架构设计（核心）
 总体架构：
-flowchart TD
-    %% ========== 用户层 ==========
-    A[👤 User / DAO] 
+![Uploading mermaid-diagram.png…]()
 
-    %% ========== AI Agent ==========
-    B[🧠 Aegis AI Agent]
-    B1[Anomaly Detection]
-    B2[Risk Analysis]
-    B3[Decision Engine]
-
-    %% ========== 数据层 ==========
-    subgraph DATA["📡 Data Layer"]
-        D1[RPC Nodes]
-        D2[Reactive Contracts]
-        D3[Logs / Events]
-        D4[DeFi Data Sources]
-    end
-
-    %% ========== 执行层 ==========
-    subgraph EXEC["⚡ Reactive Execution Layer"]
-        E1[Callback TX]
-        E2[Automation Engine]
-        E3[On-chain Execution]
-    end
-
-    %% ========== 智能层 ==========
-    subgraph AI["🤖 AI & Logic Layer"]
-        F1[ML Models]
-        F2[LLM Analysis]
-        F3[Strategy Engine]
-    end
-
-    %% ========== 风控层 ==========
-    subgraph RISK["🛡 Risk Control Layer"]
-        G1[Pause Mechanism]
-        G2[Auto Hedging]
-        G3[Alert / DAO Governance]
-    end
-
-    %% ========== 连接关系 ==========
-    A --> B
-
-    B --> B1
-    B --> B2
-    B --> B3
-
-    B1 --> DATA
-    B2 --> DATA
-    B3 --> EXEC
-
-    DATA --> AI
-    AI --> EXEC
-
-    EXEC --> RISK
-    RISK --> A
-
-    %% ========== 样式优化 ==========
-    classDef ai fill:#1f2937,stroke:#60a5fa,color:#fff
-    classDef data fill:#0f172a,stroke:#22c55e,color:#fff
-    classDef exec fill:#111827,stroke:#f59e0b,color:#fff
-    classDef risk fill:#1e1b4b,stroke:#ef4444,color:#fff
-
-    class B,B1,B2,B3,F1,F2,F3 ai
-    class D1,D2,D3,D4 data
-    class E1,E2,E3 exec
-    class G1,G2,G3 risk
 四、核心模块设计
 1. 数据采集层（Observability）
 
