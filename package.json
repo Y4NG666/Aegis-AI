@@ -8,7 +8,9 @@
     "test": "hardhat test",
     "node": "hardhat node",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
-    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia"
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "demo:trigger": "hardhat run scripts/trigger_demo_event.js --network localhost",
+    "demo:check": "hardhat run scripts/check_demo_state.js --network localhost"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
