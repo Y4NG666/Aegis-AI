@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AppFooter } from "@/components/layout/app-footer";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
+import { SystemSync } from "@/components/system/system-sync";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useUIStore } from "@/store/ui-store";
 
@@ -19,6 +20,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
+      <SystemSync />
+
       <AppSidebar className="fixed left-0 top-0 hidden md:flex" />
 
       <AnimatePresence>

@@ -36,7 +36,10 @@ async function main() {
   const ReactiveGuardian = await hre.ethers.getContractFactory(
     "AegisReactiveLiquidityGuardian",
   );
-  const demoPairAddress = process.env.DEMO_PAIR_ADDRESS || demoPairSigner.address;
+  const demoPairAddress =
+    process.env.DEMO_PAIR_ADDRESS ||
+    demoPairSigner?.address ||
+    deployer.address;
   const reactiveGuardian = await ReactiveGuardian.deploy(
     chainId,
     chainId,

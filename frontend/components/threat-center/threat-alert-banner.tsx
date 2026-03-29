@@ -3,8 +3,23 @@
 import { motion } from "framer-motion";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
+import { StatusPill } from "@/components/ui/status-pill";
+import { deriveSecurityView } from "@/lib/system-state";
+import { useUIStore } from "@/store/ui-store";
 
 export function ThreatAlertBanner() {
+  const systemState = useUIStore((state) => state.systemState);
+  const latestEvent = useUIStore((state) => state.systemState?.latest_event);
+  const securityView = deriveSecurityView(systemState);
+  const headline =
+    securityView.threatLabel === "ATTACK"
+      ? `Attack state detected: ${securityView.decisionLabel} response in effect`
+      : "System state is safe and the frontend is polling backend /status";
+  const incidentId = latestEvent?.transaction_hash.slice(0, 18) ?? "PENDING-EVENT";
+  const timestamp = latestEvent
+    ? new Date(latestEvent.observed_at).toLocaleString("en-GB", { hour12: false })
+    : "Polling every 3 seconds";
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -20,26 +35,44 @@ export function ThreatAlertBanner() {
           <div className="mb-2 flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-tertiary-container animate-pulse-lite" />
             <span className="text-[10px] uppercase tracking-[0.24em] text-tertiary">
-              Critical Security Event
+              Live Threat Signal
             </span>
           </div>
           <h1 className="font-headline text-3xl font-bold leading-none text-tertiary-container md:text-4xl">
-            Anomaly Detected: Possible Flash Loan Attack Pattern
+            {headline}
           </h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="rounded-sm border border-outline-variant/20 bg-surface-container-highest px-4 py-2">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
-              Incident ID
+            <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+              State
             </p>
-            <p className="font-mono text-sm font-semibold">TX-8821-ALPHA</p>
+            <StatusPill label={securityView.threatLabel} tone={securityView.threatTone} />
           </div>
           <div className="rounded-sm border border-outline-variant/20 bg-surface-container-highest px-4 py-2">
             <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
-              Timestamp
+              Risk Score
             </p>
-            <p className="font-mono text-sm font-semibold">14:22:01.442 UTC</p>
+            <p className="font-mono text-sm font-semibold">{securityView.riskScore}%</p>
+          </div>
+          <div className="rounded-sm border border-outline-variant/20 bg-surface-container-highest px-4 py-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+              Protocol
+            </p>
+            <p className="font-mono text-sm font-semibold">{securityView.protocolStatus}</p>
+          </div>
+          <div className="rounded-sm border border-outline-variant/20 bg-surface-container-highest px-4 py-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+              Incident
+            </p>
+            <p className="font-mono text-sm font-semibold">{incidentId}</p>
+          </div>
+          <div className="rounded-sm border border-outline-variant/20 bg-surface-container-highest px-4 py-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+              Updated
+            </p>
+            <p className="font-mono text-sm font-semibold">{timestamp}</p>
           </div>
         </div>
       </div>

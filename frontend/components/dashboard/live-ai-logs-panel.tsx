@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 
-import { liveAiLogs } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { useUIStore } from "@/store/ui-store";
 
 const toneClasses = {
   primary: "text-primary",
@@ -12,6 +12,64 @@ const toneClasses = {
 };
 
 export function LiveAiLogsPanel() {
+  const systemState = useUIStore((state) => state.systemState);
+  const lastDemoTrigger = useUIStore((state) => state.lastDemoTrigger);
+  const recentEvents = systemState?.monitor.recent_events ?? [];
+  const liveAiLogs =
+    recentEvents.length > 0
+      ? recentEvents.flatMap((event) => [
+          {
+            time: `[${new Date(event.observed_at).toLocaleTimeString("en-GB", { hour12: false })}]`,
+            type: "EVENT",
+            message: `Event detected for ${event.subject_address} at block ${event.block_number}.`,
+            tone: "primary" as const,
+          },
+          {
+            time: `[${new Date(event.observed_at).toLocaleTimeString("en-GB", { hour12: false })}]`,
+            type: "AI",
+            message: `Risk score ${Math.round(event.anomaly.risk_score * 100)}%.`,
+            tone: event.anomaly.risk_score >= 0.7 ? ("danger" as const) : ("primary" as const),
+          },
+          {
+            time: `[${new Date(event.observed_at).toLocaleTimeString("en-GB", { hour12: false })}]`,
+            type: "AI",
+            message: `Decision ${event.decision.action.toUpperCase()}.`,
+            tone: event.decision.action === "pause" ? ("danger" as const) : ("primary" as const),
+          },
+          {
+            time: `[${new Date(event.observed_at).toLocaleTimeString("en-GB", { hour12: false })}]`,
+            type: "EXEC",
+            message:
+              Object.keys(event.executions).length > 0
+                ? `Transaction hash ${
+                    event.executions.pause ??
+                    event.executions.hedge ??
+                    event.executions.guardian ??
+                    event.transaction_hash
+                  }.`
+                : `Transaction hash ${event.transaction_hash}.`,
+            tone: Object.keys(event.executions).length > 0 ? ("primary" as const) : ("muted" as const),
+          },
+        ])
+      : (lastDemoTrigger?.logs.length ?? 0) > 0
+        ? lastDemoTrigger!.logs.map((log) => ({
+            time: "[LIVE]",
+            type: "DEMO",
+            message: `${log.label}: ${log.value}`,
+            tone:
+              log.label === "Risk score" && (lastDemoTrigger?.risk_score ?? 0) >= 70
+                ? ("danger" as const)
+                : ("primary" as const),
+          }))
+      : [
+          {
+            time: "[--:--:--]",
+            type: "IDLE",
+            message: "Waiting for the first contract event from the monitor listener.",
+            tone: "muted" as const,
+          },
+        ];
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}

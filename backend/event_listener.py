@@ -9,6 +9,7 @@ from typing import Any, Dict, Mapping, Optional
 
 from web3 import Web3
 
+from ai import GuardianEngine
 from backend.blockchain import (
     GuardianContractClient,
     RetryConfig,
@@ -17,7 +18,6 @@ from backend.blockchain import (
     retry_call,
 )
 from backend.config import Settings, settings
-from backend.pipeline import DefenseOrchestrator
 
 
 logger = logging.getLogger("aegis.monitor")
@@ -61,7 +61,13 @@ def configure_logging(log_level: str) -> None:
 
 
 class DeFiEventMonitor:
-    def __init__(self, app_settings: Settings) -> None:
+    def __init__(
+        self,
+        app_settings: Settings,
+        guardian_engine: GuardianEngine | None = None,
+        *,
+        w3: Web3 | None = None,
+    ) -> None:
         self.settings = app_settings
         self.retry_config = RetryConfig(
             attempts=max(self.settings.rpc_retry_attempts, 1),
@@ -69,7 +75,7 @@ class DeFiEventMonitor:
             receipt_timeout_seconds=max(self.settings.receipt_timeout_seconds, 30),
             receipt_poll_latency_seconds=max(self.settings.receipt_poll_latency_seconds, 0.5),
         )
-        self.w3 = Web3(Web3.HTTPProvider(self.settings.web3_provider_uri))
+        self.w3 = w3 or Web3(Web3.HTTPProvider(self.settings.web3_provider_uri))
 
         if not retry_call(self.w3.is_connected, "connect to provider", self.retry_config):
             raise RuntimeError(f"Unable to connect to provider: {self.settings.web3_provider_uri}")
@@ -98,12 +104,13 @@ class DeFiEventMonitor:
             retry_config=self.retry_config,
             w3=self.w3,
         )
-        self.orchestrator = DefenseOrchestrator(
+        self.guardian_engine = guardian_engine or GuardianEngine(
+            provider_uri=self.settings.web3_provider_uri,
+            guardian_contract_address=self.settings.contract_address,
+            risk_controller_address=self.settings.risk_controller_address,
+            signer_key=self.settings.monitor_signer_key,
             guardian_client=self.guardian_client,
-            risk_controller=self.risk_controller,
-            hedge_max_position_bps=self.settings.hedge_max_position_bps,
-            hedge_liquidation_threshold_bps=self.settings.hedge_liquidation_threshold_bps,
-            hedge_rebalance_threshold_bps=self.settings.hedge_rebalance_threshold_bps,
+            risk_controller_client=self.risk_controller,
         )
 
         self._lock = threading.Lock()
@@ -242,13 +249,13 @@ class DeFiEventMonitor:
             args.get("reserve1ChangeBps", 0),
         )
 
-        result = self.orchestrator.evaluate_and_execute(
+        result = self.guardian_engine.run_guardian(
             subject_address=subject_address,
             transaction_data=transaction_data,
             liquidity_changes=liquidity_changes,
             on_chain_data=on_chain_data,
             summary_context=f"event={self.settings.monitor_event_name} tx={tx_hash}",
-            record_guardian=True,
+            record_onchain=True,
             execute_onchain=True,
         )
 

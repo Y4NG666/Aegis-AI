@@ -1,5 +1,11 @@
+"use client";
+
 import { ConnectWalletButton } from "@/components/ui/connect-wallet-button";
+import { DisconnectWalletButton } from "@/components/ui/disconnect-wallet-button";
 import { MaterialIcon } from "@/components/ui/material-icon";
+import { useAsyncButtonAction } from "@/hooks/use-async-button-action";
+import { syncSettingItem } from "@/lib/button-actions";
+import { useUIStore } from "@/store/ui-store";
 
 const settingsGroups = [
   {
@@ -13,6 +19,41 @@ const settingsGroups = [
     items: ["Discord and Telegram alerts", "Incident owner assignment", "Safe execution allowlist"],
   },
 ];
+
+function SettingsActionRow({ item }: { item: string }) {
+  const setSystemState = useUIStore((state) => state.setSystemState);
+  const action = useAsyncButtonAction({
+    label: `Settings:${item}`,
+    action: async () => {
+      const result = await syncSettingItem(item);
+      setSystemState(result.snapshot.systemState);
+      return result;
+    },
+    getSuccessMessage: (result) =>
+      `${result.item} synced from ${result.snapshot.systemState.deployment.network ?? "backend"}`,
+  });
+
+  return (
+    <div className="flex items-center justify-between rounded-sm border border-outline-variant/20 bg-surface-container-low p-4">
+      <span className="text-sm">{item}</span>
+      <button
+        type="button"
+        onClick={() => void action.run()}
+        disabled={action.isLoading}
+        title={action.error ?? action.feedback ?? `Load current state for ${item}`}
+        className="rounded-full border border-outline-variant/20 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {action.isLoading
+          ? "Syncing..."
+          : action.isSuccess
+            ? "Synced"
+            : action.isError
+              ? "Retry"
+              : "Edit"}
+      </button>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   return (
@@ -36,18 +77,7 @@ export default function SettingsPage() {
 
             <div className="space-y-3">
               {group.items.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between rounded-sm border border-outline-variant/20 bg-surface-container-low p-4"
-                >
-                  <span className="text-sm">{item}</span>
-                  <button
-                    type="button"
-                    className="rounded-full border border-outline-variant/20 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-on-surface-variant hover:border-primary/30 hover:text-primary"
-                  >
-                    Edit
-                  </button>
-                </div>
+                <SettingsActionRow key={item} item={item} />
               ))}
             </div>
           </article>
@@ -62,12 +92,15 @@ export default function SettingsPage() {
               <h2 className="font-headline text-lg font-bold">Wallet Interface Placeholder</h2>
             </div>
             <p className="max-w-2xl text-sm text-on-surface-variant">
-              This action is intentionally UI-only for now and is ready to be wired into Wagmi,
-              RainbowKit, or a custom Web3 provider.
+              MetaMask connectivity is live here now, so operator changes can authenticate against
+              the active wallet without replacing the existing settings UI.
             </p>
           </div>
 
-          <ConnectWalletButton />
+          <div className="flex items-center gap-3">
+            <ConnectWalletButton />
+            <DisconnectWalletButton />
+          </div>
         </div>
       </section>
     </div>

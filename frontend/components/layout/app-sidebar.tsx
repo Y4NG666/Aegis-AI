@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
+import { useAsyncButtonAction } from "@/hooks/use-async-button-action";
+import { executeEmergencyPause } from "@/lib/button-actions";
 import { navigationItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/ui-store";
@@ -15,6 +17,23 @@ type AppSidebarProps = {
 export function AppSidebar({ className }: AppSidebarProps) {
   const pathname = usePathname();
   const closeMobileSidebar = useUIStore((state) => state.closeMobileSidebar);
+  const setSystemState = useUIStore((state) => state.setSystemState);
+  const emergencyAction = useAsyncButtonAction({
+    label: "Emergency Protocol",
+    action: async () => {
+      const result = await executeEmergencyPause();
+      setSystemState(result.snapshot.systemState);
+      return result;
+    },
+    getSuccessMessage: () => "Protocol pause request submitted",
+  });
+  const emergencyLabel = emergencyAction.isLoading
+    ? "PAUSING..."
+    : emergencyAction.isError
+      ? "RETRY EMERGENCY"
+      : emergencyAction.isSuccess
+        ? "PAUSE SUBMITTED"
+        : "EMERGENCY PROTOCOL";
 
   return (
     <aside
@@ -65,9 +84,16 @@ export function AppSidebar({ className }: AppSidebarProps) {
       <div className="mt-auto px-4">
         <button
           type="button"
+          onClick={() => void emergencyAction.run()}
+          disabled={emergencyAction.isLoading}
+          title={
+            emergencyAction.error ??
+            emergencyAction.feedback ??
+            "Connect wallet and submit an emergency protocol pause"
+          }
           className="w-full bg-tertiary-container py-4 font-headline text-xs font-bold tracking-[0.2em] text-on-tertiary hover:brightness-110"
         >
-          EMERGENCY PROTOCOL
+          {emergencyLabel}
         </button>
       </div>
     </aside>

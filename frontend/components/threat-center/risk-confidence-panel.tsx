@@ -3,12 +3,19 @@
 import { motion } from "framer-motion";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
+import { StatusPill } from "@/components/ui/status-pill";
+import { deriveSecurityView } from "@/lib/system-state";
+import { useUIStore } from "@/store/ui-store";
 
 const circumference = 2 * Math.PI * 88;
-const progress = 89;
-const dashOffset = circumference - (progress / 100) * circumference;
 
 export function RiskConfidencePanel() {
+  const systemState = useUIStore((state) => state.systemState);
+  const securityView = deriveSecurityView(systemState);
+  const progress = securityView.riskScore;
+  const dashOffset = circumference - (progress / 100) * circumference;
+  const decisionLabel = securityView.decisionLabel;
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
@@ -20,7 +27,7 @@ export function RiskConfidencePanel() {
 
       <div className="relative z-10 flex flex-col items-center">
         <p className="mb-6 text-xs uppercase tracking-[0.24em] text-on-surface-variant">
-          AI Risk Confidence
+          Real-Time Risk Score
         </p>
 
         <div className="relative mb-6 flex h-48 w-48 items-center justify-center">
@@ -48,7 +55,7 @@ export function RiskConfidencePanel() {
           </svg>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-headline text-5xl font-bold text-on-surface">89%</span>
+            <span className="font-headline text-5xl font-bold text-on-surface">{progress}%</span>
             <span className="text-[10px] uppercase tracking-[0.18em] text-tertiary">
               Attack Probability
             </span>
@@ -58,8 +65,16 @@ export function RiskConfidencePanel() {
         <div className="flex w-full items-center justify-center gap-2 rounded-full border border-tertiary/20 bg-tertiary/10 px-6 py-3 animate-strobe">
           <MaterialIcon icon="gavel" className="text-sm text-tertiary" />
           <span className="font-headline text-xs font-bold uppercase tracking-tight text-tertiary">
-            Decision: Preemptive Pause Triggered
+            Decision: {decisionLabel}
           </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <StatusPill label={securityView.threatLabel} tone={securityView.threatTone} />
+          <StatusPill
+            label={securityView.protocolStatus}
+            tone={securityView.protocolStatus === "PAUSED" ? "danger" : "primary"}
+          />
         </div>
       </div>
     </motion.section>

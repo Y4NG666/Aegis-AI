@@ -42,7 +42,7 @@ def _resolve_path(raw_path: Optional[str]) -> Optional[Path]:
 
 
 def _load_deployment_manifest() -> Dict[str, Any]:
-    manifest_path = _resolve_path(os.getenv("AEGIS_DEPLOYMENT_FILE", "deployments/localhost.json"))
+    manifest_path = _resolve_path(os.getenv("AEGIS_DEPLOYMENT_FILE", "deployments/sepolia.json"))
     if not manifest_path or not manifest_path.exists():
         return {}
 
@@ -101,7 +101,7 @@ class Settings:
     monitor_event_name: str = ""
     guardian_signer_key: str = ""
     monitor_signer_key: str = ""
-    port: int = 5000
+    port: int = 8000
     debug: bool = False
     auto_start_monitor: bool = False
     monitor_poll_interval_seconds: float = 5.0
@@ -120,12 +120,15 @@ class Settings:
     demo_log_limit: int = 25
 
     def __post_init__(self) -> None:
-        deployment_path = _resolve_path(os.getenv("AEGIS_DEPLOYMENT_FILE", "deployments/localhost.json"))
+        deployment_path = _resolve_path(os.getenv("AEGIS_DEPLOYMENT_FILE", "deployments/sepolia.json"))
         self.deployment_file = str(deployment_path) if deployment_path else ""
         self.web3_provider_uri = _select_string(
             "WEB3_PROVIDER_URI",
             self.deployment_manifest,
-            default="http://127.0.0.1:8545",
+            default=_clean_string(
+                os.getenv("SEPOLIA_RPC_URL"),
+                "https://ethereum-sepolia-rpc.publicnode.com",
+            ),
         )
         self.contract_address = _select_string(
             "AEGIS_CONTRACT_ADDRESS",
@@ -169,7 +172,7 @@ class Settings:
             default=self.guardian_signer_key or shared_signer or local_signer,
         )
 
-        self.port = int(os.getenv("PORT", "5000"))
+        self.port = int(os.getenv("PORT", "8000"))
         self.debug = _bool_env("FLASK_DEBUG", False)
         self.auto_start_monitor = _bool_env("AUTO_START_MONITOR", False)
         self.monitor_poll_interval_seconds = float(os.getenv("MONITOR_POLL_INTERVAL_SECONDS", "5"))

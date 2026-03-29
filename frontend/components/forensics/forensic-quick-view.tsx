@@ -2,13 +2,56 @@
 
 import { motion } from "framer-motion";
 
+import { useAsyncButtonAction } from "@/hooks/use-async-button-action";
+import {
+  markForensicIncidentFalsePositive,
+  resumeProtocolOperations,
+} from "@/lib/button-actions";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { forensicRows } from "@/lib/mock-data";
 import { useUIStore } from "@/store/ui-store";
+import { shortenAddress } from "@/lib/utils";
 
 export function ForensicQuickView() {
   const selectedForensicsId = useUIStore((state) => state.selectedForensicsId);
+  const closeForensicsQuickView = useUIStore((state) => state.closeForensicsQuickView);
+  const setSystemState = useUIStore((state) => state.setSystemState);
   const row = forensicRows.find((item) => item.id === selectedForensicsId) ?? forensicRows[0];
+  const releaseFundsAction = useAsyncButtonAction({
+    label: `Release Funds:${row.id}`,
+    action: async () => {
+      const result = await resumeProtocolOperations();
+      setSystemState(result.snapshot.systemState);
+      return result;
+    },
+    getSuccessMessage: (result) => `Unpause tx ${shortenAddress(result.transaction.hash)} submitted`,
+  });
+  const falsePositiveAction = useAsyncButtonAction({
+    label: `False Positive:${row.id}`,
+    action: async () => {
+      const result = await markForensicIncidentFalsePositive(row);
+      setSystemState(result.snapshot.systemState);
+      return result;
+    },
+    getSuccessMessage: (result) =>
+      `${result.analysis.decision.action.toUpperCase()} / ${Math.round(
+        result.analysis.anomaly.risk_score * 100,
+      )}% risk`,
+  });
+  const releaseFundsLabel = releaseFundsAction.isLoading
+    ? "Releasing..."
+    : releaseFundsAction.isError
+      ? "Release Failed"
+      : releaseFundsAction.isSuccess
+        ? "Release Submitted"
+        : "Release Funds";
+  const falsePositiveLabel = falsePositiveAction.isLoading
+    ? "Reviewing..."
+    : falsePositiveAction.isError
+      ? "Review Failed"
+      : falsePositiveAction.isSuccess
+        ? "Marked"
+        : "Mark as False Positive";
 
   return (
     <motion.section
@@ -29,6 +72,8 @@ export function ForensicQuickView() {
 
         <button
           type="button"
+          onClick={closeForensicsQuickView}
+          title="Close forensic quick view"
           className="rounded-full p-2 transition-colors hover:bg-surface-container"
         >
           <MaterialIcon icon="close" />
@@ -75,15 +120,25 @@ export function ForensicQuickView() {
           <div className="flex flex-col gap-2">
             <button
               type="button"
+              onClick={() => void releaseFundsAction.run()}
+              disabled={releaseFundsAction.isLoading}
+              title={releaseFundsAction.error ?? releaseFundsAction.feedback ?? "Resume protocol operations"}
               className="rounded-sm bg-primary py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary"
             >
-              Release Funds
+              {releaseFundsLabel}
             </button>
             <button
               type="button"
+              onClick={() => void falsePositiveAction.run()}
+              disabled={falsePositiveAction.isLoading}
+              title={
+                falsePositiveAction.error ??
+                falsePositiveAction.feedback ??
+                "Run a low-risk backend reassessment"
+              }
               className="rounded-sm border border-outline-variant bg-surface-container-low py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface"
             >
-              Mark as False Positive
+              {falsePositiveLabel}
             </button>
           </div>
         </div>

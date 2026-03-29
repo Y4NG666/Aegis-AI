@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
-import { dashboardMetrics } from "@/lib/mock-data";
+import { deriveSecurityView } from "@/lib/system-state";
 import { cn } from "@/lib/utils";
+import { useUIStore } from "@/store/ui-store";
 
 const toneMap = {
   primary: {
@@ -24,11 +25,54 @@ const toneMap = {
   },
 };
 
+type LiveMetric = {
+  label: string;
+  value: string;
+  description: string;
+  tone: keyof typeof toneMap;
+  icon: string;
+  footer: string;
+  progress?: number;
+};
+
 export function DashboardMetrics() {
+  const walletAddress = useUIStore((state) => state.walletAddress);
+  const systemState = useUIStore((state) => state.systemState);
+  const securityView = deriveSecurityView(systemState);
+  const metrics: LiveMetric[] = [
+    {
+      label: "SYSTEM_STATE",
+      value: securityView.threatLabel,
+      description: "Real-time security stance from backend /status polling",
+      tone: securityView.threatTone,
+      icon: "verified_user",
+      footer: systemState?.monitor.running ? "LISTENER_ACTIVE" : "LISTENER_IDLE",
+    },
+    {
+      label: "RISK_CONTROLLER",
+      value: securityView.protocolStatus,
+      description: "Current on-chain protocol protection mode",
+      tone: securityView.protocolStatus === "PAUSED" ? "danger" : "neutral",
+      icon: "shield_locked",
+      footer: `${systemState?.monitor.processed_events ?? 0} EVENTS PROCESSED`,
+      progress: securityView.riskScore,
+    },
+    {
+      label: "RISK_SCORE",
+      value: `${securityView.riskScore}%`,
+      description:
+        walletAddress ?? "Live risk score derived from the latest backend status snapshot",
+      tone: walletAddress ? "primary" : "neutral",
+      icon: "account_balance_wallet",
+      footer: `LAST_ACTION_${securityView.decisionLabel}`,
+    },
+  ];
+
   return (
     <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {dashboardMetrics.map((metric, index) => {
+      {metrics.map((metric, index) => {
         const tone = toneMap[metric.tone];
+        const progress = metric.progress ?? 0;
 
         return (
           <motion.article
@@ -61,7 +105,7 @@ export function DashboardMetrics() {
                     key={`${metric.label}-${itemIndex}`}
                     className={cn(
                       "h-1",
-                      itemIndex < metric.progress / 20 ? "bg-primary" : "bg-surface-container-highest",
+                      itemIndex < progress / 20 ? "bg-primary" : "bg-surface-container-highest",
                     )}
                   />
                 ))}

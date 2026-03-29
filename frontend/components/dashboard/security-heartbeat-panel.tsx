@@ -3,9 +3,30 @@
 import { motion } from "framer-motion";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
-import { dashboardStats } from "@/lib/mock-data";
+import { useUIStore } from "@/store/ui-store";
 
 export function SecurityHeartbeatPanel() {
+  const systemState = useUIStore((state) => state.systemState);
+  const latestEvent = systemState?.latest_event;
+  const dashboardStats = [
+    {
+      label: "MONITOR",
+      value: systemState?.monitor.running ? "RUNNING" : "IDLE",
+    },
+    {
+      label: "PROCESSED_EVENTS",
+      value: String(systemState?.monitor.processed_events ?? 0),
+    },
+    {
+      label: "LAST_RISK",
+      value: latestEvent ? `${Math.round(latestEvent.anomaly.risk_score * 100)}%` : "N/A",
+    },
+    {
+      label: "LAST_BLOCK",
+      value: latestEvent ? String(latestEvent.block_number) : "N/A",
+    },
+  ] as const;
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}
@@ -20,8 +41,12 @@ export function SecurityHeartbeatPanel() {
         </div>
 
         <div className="flex flex-wrap gap-4 font-mono text-[10px] uppercase tracking-[0.2em]">
-          <span className="text-primary">Analysis Rate: 14.2 KH/S</span>
-          <span className="text-on-surface-variant">Node: AEGIS-Z-99</span>
+          <span className="text-primary">
+            Active Subject: {systemState?.contracts.guardian.subject_address || "UNSET"}
+          </span>
+          <span className="text-on-surface-variant">
+            Next Block: {systemState?.monitor.next_block ?? "WAITING"}
+          </span>
         </div>
       </div>
 

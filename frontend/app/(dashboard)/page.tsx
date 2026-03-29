@@ -1,3 +1,4 @@
+import { ControlPlanePanel } from "@/components/dashboard/control-plane-panel";
 import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
 import { LiveAiLogsPanel } from "@/components/dashboard/live-ai-logs-panel";
 import { ProtocolHealthPanel } from "@/components/dashboard/protocol-health-panel";
@@ -21,6 +22,8 @@ export default function DashboardPage() {
       </header>
 
       <DashboardMetrics />
+
+      <ControlPlanePanel />
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="lg:col-span-8">
